@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends 'crm/base.html' %}
+{% block body_block %}
+    <h1>Delete {{service.service}} for {{ service.cust_id.first_name }} {{ service.cust_id.last_name }}?</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" class="btn btn-danger" value="Delete">
+        <a href="{% url 'crm:home' pk=service.id %} ">Cancel</a>
+    </form>
+{% endblock %}
+</html>

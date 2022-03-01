@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends 'crm/base.html' %}
+{% load static %}
+{% block content %}
+    <body>
+    {% if user.is_authenticated %}
+        <div class="page-container">
+            <h2 class="top-menu">Hello {{ user.username }},</h2>
+            <p>Please choose from options below.</p>
+        </div>
+    {% else %}
+        <p>Please choose from options below.</p>
+    {% endif %}
+    <div class="content container">
+        <!-- Example row of columns using cards for alignment
+             The value of 'col-md-x' for all columns in the row must add up to 12
+             This page has 3 columns, each column uses col-md-4, for a total of 12 -->
+        <div class="row">
+            <div class="col-md-4 d-flex align-items-stretch">
+                <div class="card">
+                    <img src="{% static "images/customer.jpg" %}" class="card-img-top" alt="customer">
+                    <div class="card-body">
+                        <h5 class="card-title">Customers</h5>
+                        <p class="card-text">We love our customers.</p>
+                        <p><a class="btn btn-primary" href="{% url 'crm:customer_list' %}"
+                              role="button">View details &raquo;</a></p>
+                    </div>
+                </div>
+            </div>
+
+           <div class="col-md-4 d-flex align-items-stretch">
+                <div class="card">
+                    <img src="{% static "images/lunch.jpeg" %}" class="card-img-top" alt="lunch">
+                    <div class="card-body">
+                        <h5 class="card-title">Services</h5>
+                        <p class="card-text">Great Services</p>
+                        <p><a class="btn btn-primary" href="{% url 'crm:service_list' %}"
+                              role="button">View details &raquo;</a></p>
+                    </div>
+                </div>
+            </div>
+           <div class="col-md-4 d-flex align-items-stretch">
+                <div class="card">
+                    <img src="{% static "images/cupcakes.jpeg" %}" class="card-img-top" alt="cupcakes">
+                    <div class="card-body">
+                        <h5 class="card-title">Products</h5>
+                        <p class="card-text">Great Products</p>
+                        <p><a class="btn btn-primary" href="{% url 'crm:product_list' %}"
+                              role="button">View details &raquo;</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+{% endblock %}
+</html>
