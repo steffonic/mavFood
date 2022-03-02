@@ -178,31 +178,16 @@ def summary(request, pk):
 
 @login_required
 def summary_pdf(request, pk):
-    # customer = Service.objects.all
-    # services = Service.objects.all
-    # products = Product.objects.all
     customer = get_object_or_404(Customer, pk=pk)
     services = Service.objects.filter(cust_name=pk)
     products = Product.objects.filter(cust_name=pk)
 
     sum_service_charge = \
-        Service.objects.aggregate(Sum('service_charge'))
+        Service.objects.filter(cust_name=pk).aggregate(Sum('service_charge'))
     sum_product_charge = \
-        Product.objects.aggregate(Sum('charge'))
-
-    # Create a bytestream buffer to receive PDF data.
-    buf = io.BytesIO()
-    # Create the PDF object, using the buffer as its "file."
-    c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-    # Create a text object
-    textob = c.beginText()
-    textob.setTextOrigin(inch, 1 * inch)
-    textob.setFont("Helvetica", 14)
+        Product.objects.filter(cust_name=pk).aggregate(Sum('charge'))
 
     test1 = sum_product_charge.get("charge__sum")
-
-    # test1 = 1
-    # test2 = 2
 
     if test1 is None:
         sum_product_charge = {'charge__sum': Decimal('0')}
@@ -216,9 +201,65 @@ def summary_pdf(request, pk):
     sum_total_charge = round(test1 + test2, 2)
     test1 = round(test1, 2)
     test2 = round(test2, 2)
-    textob.textLine("Total Product Charges:  " + str(test1))
-    textob.textLine("Total Service Charges:  " + str(test2))
-    textob.textLine("Grand total of Service and Product Charges: " + str(sum_total_charge))
+
+    lines = []
+    s = ("Name: " + customer.cust_name)
+    lines.append(s)
+    s = ("Organization: " + customer.organization)
+    lines.append(s)
+    s = ("Job Title: " + customer.role)
+    lines.append(s)
+    lines.append(" ")
+    lines.append("Address:")
+    lines.append(customer.bldgroom)
+    lines.append(customer.address)
+    s = (customer.city + ", " + customer.state + " " + customer.zipcode)
+    lines.append(s)
+    s = ("Phone Number: " + customer.phone + " Email: " + customer.email)
+    lines.append(s)
+
+    lines.append(" ")
+    lines.append("**********************************************************************************************")
+    lines.append(" ")
+    lines.append("Charge Detail:")
+    lines.append(" ")
+    for product in products:
+        lines.append("Item: " + product.product)
+        lines.append("Description: " + product.description)
+        lines.append("Created Date: " + product.created_date.strftime("%Y-%m-%d %H:%M:%S"))
+        lines.append("Pickup Time: " + product.pickup_time.strftime("%Y-%m-%d %H:%M:%S"))
+        lines.append("Quantity: " + str(product.quantity) + " Price: " + str(product.charge))
+        lines.append(" ")
+        lines.append("*********************************************************************************************")
+
+    lines.append(" ")
+    for service in services:
+        lines.append("Service Category: " + service.service_category)
+        lines.append("Description: " + service.description)
+        lines.append("Created Date: " + service.created_date.strftime("%Y-%m-%d %H:%M:%S"))
+        lines.append("Setup Time: " + service.setup_time.strftime("%Y-%m-%d %H:%M:%S"))
+        lines.append("Cleanup Time: " + service.cleanup_time.strftime("%Y-%m-%d %H:%M:%S"))
+        lines.append("Location: " + service.location)
+        lines.append("Service Charge: " + str(service.service_charge))
+        lines.append("*********************************************************************************************")
+
+    lines.append(" ")
+    lines.append("Total Product Charges:  " + str(test1))
+    lines.append("Total Service Charges:  " + str(test2))
+    lines.append("Grand total of Service and Product Charges: " + str(sum_total_charge))
+
+    # Create a bytestream buffer to receive PDF data.
+    buf = io.BytesIO()
+    # Create the PDF object, using the buffer as its "file."
+    c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
+    # Create a text object
+    textob = c.beginText()
+    textob.setTextOrigin(inch, 1 * inch)
+    textob.setFont("Helvetica", 14)
+
+    for line in lines:
+        textob.textLine(line)
+
 
     # Finish up
     c.drawText(textob)
