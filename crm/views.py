@@ -6,6 +6,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, F
 from _decimal import Decimal
 
+from django.http import FileResponse
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+
 now = timezone.now()
 
 
@@ -152,7 +158,7 @@ def summary(request, pk):
     # if no product or service records exist for the customer,
     # change the ‘None’ returned by the query to 0.00
     test1 = sum_product_charge.get("charge__sum")
-    if test1 is None :
+    if test1 is None:
         sum_product_charge = {'charge__sum': Decimal('0')}
         test1 = 0
 
@@ -163,8 +169,61 @@ def summary(request, pk):
 
     sum_total_charge = round(test1 + test2, 2)
     return render(request, 'crm/summary.html', {'customer': customer,
-                              'products': products,
-                              'services': services,
-                              'sum_service_charge': sum_service_charge,
-                              'sum_product_charge': sum_product_charge,
-                              'sum_total_charge': sum_total_charge, })
+                                                'products': products,
+                                                'services': services,
+                                                'sum_service_charge': sum_service_charge,
+                                                'sum_product_charge': sum_product_charge,
+                                                'sum_total_charge': sum_total_charge, })
+
+
+@login_required
+def summary_pdf(request, pk):
+    # customer = Service.objects.all
+    # services = Service.objects.all
+    # products = Product.objects.all
+    customer = get_object_or_404(Customer, pk=pk)
+    services = Service.objects.filter(cust_name=pk)
+    products = Product.objects.filter(cust_name=pk)
+
+    sum_service_charge = \
+        Service.objects.aggregate(Sum('service_charge'))
+    sum_product_charge = \
+        Product.objects.aggregate(Sum('charge'))
+
+    # Create a bytestream buffer to receive PDF data.
+    buf = io.BytesIO()
+    # Create the PDF object, using the buffer as its "file."
+    c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
+    # Create a text object
+    textob = c.beginText()
+    textob.setTextOrigin(inch, 1 * inch)
+    textob.setFont("Helvetica", 14)
+
+    test1 = sum_product_charge.get("charge__sum")
+
+    # test1 = 1
+    # test2 = 2
+
+    if test1 is None:
+        sum_product_charge = {'charge__sum': Decimal('0')}
+        test1 = 0
+
+    test2 = sum_service_charge.get("service_charge__sum")
+    if test2 is None:
+        sum_service_charge = {'service_charge__sum': Decimal('0')}
+        test2 = 0
+
+    sum_total_charge = round(test1 + test2, 2)
+    test1 = round(test1, 2)
+    test2 = round(test2, 2)
+    textob.textLine("Total Product Charges:  " + str(test1))
+    textob.textLine("Total Service Charges:  " + str(test2))
+    textob.textLine("Grand total of Service and Product Charges: " + str(sum_total_charge))
+
+    # Finish up
+    c.drawText(textob)
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    # Return
+    return FileResponse(buf, as_attachment=True, filename='ActivitySummary.pdf')

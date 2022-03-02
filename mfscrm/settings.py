@@ -38,7 +38,7 @@ MEDIA_DIR = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-soh98qocbd7beh!il(0@izwqn3b#6la@$js^0d)u8kx!8juxnr'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', '.pythonanywhere.com']
 
@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'django.contrib.humanize',
     'mathfilters',
+    'reportlab',
 ]
 
 MIDDLEWARE = [

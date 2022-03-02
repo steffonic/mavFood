@@ -120,10 +120,11 @@
             <tr class="bg-info">
                 <th>Total Service Charges and Product Charges:
                     {{ sum_total_charge|intcomma }} </th>
+                <td><a href="{% url 'crm:summary_pdf'  pk=customer.pk %}"
+                           class="btn btn-primary">Print PDF</a>
+                </td>
             </tr>
         </thead>
     </table>
-
-</div>
 
 {% endblock %}
